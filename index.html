@@ -281,17 +281,6 @@
                 // Загружаем слова
                 loadWords();
             });
-            // Добавьте поисковую строку
-<input type="text" id="search" placeholder="Найти слово...">
-<script>
-document.getElementById('search').addEventListener('input', async (e) => {
-    const { data } = await supabase
-        .from('words')
-        .select('*')
-        .ilike('name', `%${e.target.value}%`);
-    // показать результаты
-});
-</script>
             // Функция проверки подключения
             async function testConnection() {
                 try {
@@ -357,3 +346,4 @@ document.getElementById('search').addEventListener('input', async (e) => {
 </body>
 
 </html>
+
