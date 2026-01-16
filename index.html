@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Славянский Сленг Словарь</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .word { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .definition { margin: 10px 0; padding: 10px; border-left: 3px solid #4CAF50; }
+        button { background: #4CAF50; color: white; border: none; padding: 8px 15px; margin: 5px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #45a049; }
+        .error { color: red; padding: 10px; background: #ffe6e6; border-radius: 4px; }
+        .success { color: green; padding: 10px; background: #e6ffe6; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>📚 Славянский Сленг Словарь</h1>
+    
+    <div id="words-container">
+        Загрузка слов...
+    </div>
+
+    <script>
+        // === ВАЖНО: ОБЕРНИТЕ ВСЕ В АНОНИМНУЮ ФУНКЦИЮ ===
+        (function() {
+            // === КОНФИГУРАЦИЯ SUPABASE ===
+            // ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ НА СВОИ!
+            const supabaseUrl = 'https://jnzvjblpgvpkjammbwfi.supabase.co';
+            const supabaseKey = 'sb_publishable_vBBeAZcQPXtaj7z5FCCVYg_6XDdChlu';
+            
+            // Создаем клиент Supabase
+            window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            
+            // === ФУНКЦИИ ДЛЯ РАБОТЫ С БАЗОЙ ===
+            
+            // 1. Получить все слова
+            window.loadWords = async function() {
+                const container = document.getElementById('words-container');
+                container.innerHTML = '<p>Загрузка...</p>';
+                
+                try {
+                    const { data: words, error } = await window.supabaseClient
+                        .from('words')
+                        .select('*')
+                        .order('name');
+                    
+                    if (error) throw error;
+                    
+                    let html = '<h2>Список слов (' + words.length + ')</h2>';
+                    
+                    words.forEach(word => {
+                        html += `
+                            <div class="word">
+                                <h3>${word.name} (ID: ${word.id})</h3>
+                                <button onclick="loadDefinitions(${word.id})">
+                                    Показать определения
+                                </button>
+                                <div id="defs-${word.id}"></div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                    
+                } catch (error) {
+                    container.innerHTML = `<p class="error">Ошибка загрузки слов: ${error.message}</p>`;
+                    console.error('Ошибка загрузки слов:', error);
+                }
+            }
+            
+            // 2. Получить определения для слова
+            window.loadDefinitions = async function(wordId) {
+                const container = document.getElementById(`defs-${wordId}`);
+                container.innerHTML = '<p>Загрузка определений...</p>';
+                
+                try {
+                    const { data: definitions, error } = await window.supabaseClient
+                        .from('definitions')
+                        .select('*')
+                        .eq('word_id', wordId)
+                        .order('upvotes', { ascending: false });
+                    
+                    if (error) throw error;
+                    
+                    if (definitions.length === 0) {
+                        container.innerHTML = '<p>Определений пока нет</p>';
+                        return;
+                    }
+                    
+                    let html = '<div class="definitions">';
+                    
+                    definitions.forEach(def => {
+                        html += `
+                            <div class="definition">
+                                <p><strong>Определение:</strong> ${def.definition_text}</p>
+                                ${def.example_usage ? `<p><em>Пример:</em> ${def.example_usage}</p>` : ''}
+                                <p>
+                                    <small>
+                                        👍 ${def.upvotes} | 👎 ${def.downvotes} 
+                                        | Автор: ${def.author_name || 'Аноним'}
+                                    </small>
+                                </p>
+                                <button onclick="upvoteDefinition(${def.id})">+1</button>
+                                <button onclick="downvoteDefinition(${def.id})">-1</button>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    container.innerHTML = html;
+                    
+                } catch (error) {
+                    container.innerHTML = `<p class="error">Ошибка загрузки определений: ${error.message}</p>`;
+                    console.error('Ошибка загрузки определений:', error);
+                }
+            }
+            
+            // 3. Поставить лайк определению
+            window.upvoteDefinition = async function(definitionId) {
+                try {
+                    const { data: def, error: fetchError } = await window.supabaseClient
+                        .from('definitions')
+                        .select('upvotes, word_id')
+                        .eq('id', definitionId)
+                        .single();
+                    
+                    if (fetchError) throw fetchError;
+                    
+                    const newUpvotes = def.upvotes + 1;
+                    
+                    const { error: updateError } = await window.supabaseClient
+                        .from('definitions')
+                        .update({ upvotes: newUpvotes })
+                        .eq('id', definitionId);
+                    
+                    if (updateError) throw updateError;
+                    
+                    alert('Лайк добавлен!');
+                    
+                    // Обновляем отображение
+                    if (def.word_id) {
+                        loadDefinitions(def.word_id);
+                    }
+                    
+                } catch (error) {
+                    console.error('Ошибка голосования:', error);
+                    alert('Ошибка: ' + error.message);
+                }
+            }
+            
+            // 4. Поставить дизлайк
+            window.downvoteDefinition = async function(definitionId) {
+                try {
+                    const { data: def, error: fetchError } = await window.supabaseClient
+                        .from('definitions')
+                        .select('downvotes, word_id')
+                        .eq('id', definitionId)
+                        .single();
+                    
+                    if (fetchError) throw fetchError;
+                    
+                    const newDownvotes = def.downvotes + 1;
+                    
+                    const { error: updateError } = await window.supabaseClient
+                        .from('definitions')
+                        .update({ downvotes: newDownvotes })
+                        .eq('id', definitionId);
+                    
+                    if (updateError) throw updateError;
+                    
+                    alert('Дизлайк добавлен!');
+                    
+                    if (def.word_id) {
+                        loadDefinitions(def.word_id);
+                    }
+                    
+                } catch (error) {
+                    console.error('Ошибка голосования:', error);
+                    alert('Ошибка: ' + error.message);
+                }
+            }
+            
+            // 5. Добавить новое определение
+            window.addDefinition = async function() {
+                const wordName = prompt('Введите слово (например: "краш"):');
+                if (!wordName) return;
+                
+                const definitionText = prompt('Введите определение:');
+                if (!definitionText) {
+                    alert('Определение обязательно!');
+                    return;
+                }
+                
+                const example = prompt('Введите пример использования (необязательно):');
+                const author = prompt('Ваше имя (или оставьте пусто для анонима):') || 'Аноним';
+                
+                try {
+                    // 1. Проверяем, есть ли такое слово
+                    const { data: existingWords, error: searchError } = await window.supabaseClient
+                        .from('words')
+                        .select('id')
+                        .eq('name', wordName.trim().toLowerCase());
+                    
+                    let wordId;
+                    
+                    if (searchError) throw searchError;
+                    
+                    if (existingWords && existingWords.length > 0) {
+                        // Слово уже есть
+                        wordId = existingWords[0].id;
+                    } else {
+                        // Создаем новое слово
+                        const { data: newWord, error: insertError } = await window.supabaseClient
+                            .from('words')
+                            .insert([{ name: wordName.trim().toLowerCase() }])
+                            .select('id')
+                            .single();
+                        
+                        if (insertError) throw insertError;
+                        wordId = newWord.id;
+                    }
+                    
+                    // 2. Добавляем определение
+                    const { error: defError } = await window.supabaseClient
+                        .from('definitions')
+                        .insert([
+                            {
+                                word_id: wordId,
+                                definition_text: definitionText,
+                                example_usage: example || null,
+                                author_name: author,
+                                upvotes: 0,
+                                downvotes: 0
+                            }
+                        ]);
+                    
+                    if (defError) throw defError;
+                    
+                    alert('✅ Определение успешно добавлено!');
+                    
+                    // 3. Обновляем список слов
+                    loadWords();
+                    
+                } catch (error) {
+                    console.error('Ошибка добавления:', error);
+                    alert('❌ Ошибка: ' + error.message);
+                }
+            }
+            
+            // 6. Добавить новое слово без определения
+            window.addWord = async function() {
+                const wordName = prompt('Введите новое слово:');
+                if (!wordName) return;
+                
+                try {
+                    const { error } = await window.supabaseClient
+                        .from('words')
+                        .insert([{ name: wordName.trim().toLowerCase() }]);
+                    
+                    if (error) throw error;
+                    
+                    alert('✅ Слово "' + wordName + '" добавлено!');
+                    loadWords();
+                    
+                } catch (error) {
+                    console.error('Ошибка добавления слова:', error);
+                    alert('❌ Ошибка: ' + error.message);
+                }
+            }
+            
+            // === ЗАГРУЗКА ДАННЫХ ПРИ ЗАПУСКЕ ===
+            document.addEventListener('DOMContentLoaded', function() {
+                // Тестовое сообщение
+                console.log('Приложение загружается...');
+                
+                // Проверяем подключение
+                testConnection();
+                
+                // Загружаем слова
+                loadWords();
+            });
+            
+            // Функция проверки подключения
+            async function testConnection() {
+                try {
+                    const { data, error } = await window.supabaseClient
+                        .from('words')
+                        .select('count', { count: 'exact', head: true });
+                    
+                    if (error) {
+                        console.error('❌ Ошибка подключения к Supabase:', error);
+                        document.getElementById('words-container').innerHTML = 
+                            `<p class="error">Ошибка подключения к базе данных: ${error.message}</p>`;
+                    } else {
+                        console.log('✅ Подключение к Supabase успешно');
+                    }
+                } catch (err) {
+                    console.error('❌ Критическая ошибка:', err);
+                }
+            }
+            
+        })(); // Конец анонимной функции
+    </script>
+    
+    <div style="margin-top: 30px; padding: 20px; background: #e8f5e9; border-radius: 8px;">
+        <h3>📋 Управление словарем</h3>
+        
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+            <button onclick="addDefinition()">➕ Добавить определение</button>
+            <button onclick="addWord()">✨ Добавить новое слово</button>
+            <button onclick="loadWords()">🔄 Обновить список</button>
+        </div>
+        
+        <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; border-left: 4px solid #2196F3;">
+            <h4>🎯 Как пользоваться:</h4>
+            <ol>
+                <li>Нажмите "Добавить определение"</li>
+                <li>Введите слово (если его нет - оно создастся автоматически)</li>
+                <li>Введите определение и пример</li>
+                <li>Нажмите на слово, чтобы увидеть все его определения</li>
+                <li>Голосуйте за лучшие определения кнопками 👍/👎</li>
+            </ol>
+            
+            <p><strong>💡 Подсказка:</strong> Откройте консоль браузера (F12 → Console) для отладки.</p>
+        </div>
+    </div>
+    
+    <!-- Простой футер -->
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9em;">
+        <p>Славянский Сленг Словарь | База данных: Supabase | Слов в базе: <span id="word-count">...</span></p>
+        <script>
+            // Автоматический подсчет слов
+            setTimeout(async () => {
+                try {
+                    const { count } = await window.supabaseClient
+                        .from('words')
+                        .select('*', { count: 'exact', head: true });
+                    document.getElementById('word-count').textContent = count || 0;
+                } catch (e) {
+                    document.getElementById('word-count').textContent = '?';
+                }
+            }, 1000);
+        </script>
+    </footer>
+</body>
+</html>
