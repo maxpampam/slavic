@@ -4,102 +4,327 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Славянский Сленг Словарь</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Unbounded:wght@700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .word { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 8px; }
-        .definition { margin: 10px 0; padding: 10px; border-left: 3px solid #4CAF50; }
-        button { background: #4CAF50; color: white; border: none; padding: 8px 15px; margin: 5px; cursor: pointer; border-radius: 4px; }
-        button:hover { background: #45a049; }
-        .error { color: red; padding: 10px; background: #ffe6e6; border-radius: 4px; }
-        .success { color: green; padding: 10px; background: #e6ffe6; border-radius: 4px; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-family: 'Unbounded', sans-serif;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .hero-description {
+            margin: 0 0 16px;
+            font-size: 18px;
+            color: #4b5563;
+        }
+
+        .flag-marquee {
+            overflow: hidden;
+            background: linear-gradient(90deg, #f5f5f5 0%, #ffffff 50%, #f5f5f5 100%);
+            border-radius: 999px;
+            padding: 10px 0;
+            margin: 12px 0 20px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .flag-track {
+            display: flex;
+            width: max-content;
+            animation: marquee-scroll 18s linear infinite;
+        }
+
+        .flag-group {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 0 18px;
+            font-size: 28px;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        @keyframes marquee-scroll {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-50%);
+            }
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 24px 0 16px;
+        }
+
+        .search-input {
+            flex: 1 1 320px;
+            padding: 12px 14px;
+            font-size: 16px;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+        }
+
+        .word {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+
+        .definition {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .error {
+            color: red;
+            padding: 10px;
+            background: #ffe6e6;
+            border-radius: 4px;
+        }
+
+        .success {
+            color: green;
+            padding: 10px;
+            background: #e6ffe6;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
-    <h1>📚 Славянский Сленг Словарь</h1>
-    
+    <h1>Славик</h1>
+    <p class="hero-description">Народный славянский словарь</p>
+
+    <div class="flag-marquee" aria-label="Флаги славянских государств">
+        <div class="flag-track">
+            <div class="flag-group">
+                <span>🇷🇺</span>
+                <span>🇺🇦</span>
+                <span>🇧🇾</span>
+                <span>🇵🇱</span>
+                <span>🇨🇿</span>
+                <span>🇸🇰</span>
+                <span>🇧🇬</span>
+                <span>🇷🇸</span>
+                <span>🇭🇷</span>
+                <span>🇸🇮</span>
+                <span>🇧🇦</span>
+                <span>🇲🇪</span>
+                <span>🇲🇰</span>
+            </div>
+            <div class="flag-group" aria-hidden="true">
+                <span>🇷🇺</span>
+                <span>🇺🇦</span>
+                <span>🇧🇾</span>
+                <span>🇵🇱</span>
+                <span>🇨🇿</span>
+                <span>🇸🇰</span>
+                <span>🇧🇬</span>
+                <span>🇷🇸</span>
+                <span>🇭🇷</span>
+                <span>🇸🇮</span>
+                <span>🇧🇦</span>
+                <span>🇲🇪</span>
+                <span>🇲🇰</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="search-bar">
+        <input id="search-input" class="search-input" type="text" placeholder="Введите слово для поиска">
+        <button id="search-button">Найти слово</button>
+        <button onclick="loadWords()">Случайное слово</button>
+    </div>
+
     <div id="words-container">
         Загрузка слов...
     </div>
 
     <script>
-        // === ВАЖНО: ОБЕРНИТЕ ВСЕ В АНОНИМНУЮ ФУНКЦИЮ ===
         (function() {
-            // === КОНФИГУРАЦИЯ SUPABASE ===
-            // ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ НА СВОИ!
             const supabaseUrl = 'https://jnzvjblpgvpkjammbwfi.supabase.co';
             const supabaseKey = 'sb_publishable_vBBeAZcQPXtaj7z5FCCVYg_6XDdChlu';
-            
-            // Создаем клиент Supabase
+
             window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-            
-            // === ФУНКЦИИ ДЛЯ РАБОТЫ С БАЗОЙ ===
-            
-            // 1. Получить все слова
+
+            function normalizeWordName(value) {
+                return (value || '').trim().toLowerCase();
+            }
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function renderWordCard(word, options = {}) {
+                const container = document.getElementById('words-container');
+                const title = options.title || 'Случайное слово';
+                const showRandomButton = options.showRandomButton !== false;
+
+                container.innerHTML = `
+                    <h2>${escapeHtml(title)}</h2>
+                    <div class="word">
+                        <h3>${escapeHtml(word.name)} (ID: ${word.id})</h3>
+                        <button onclick="loadDefinitions(${word.id})">Показать определения</button>
+                        ${showRandomButton ? '<button onclick="loadWords()">Еще случайное слово</button>' : ''}
+                        <div id="defs-${word.id}"></div>
+                    </div>
+                `;
+
+                if (options.autoLoadDefinitions) {
+                    loadDefinitions(word.id);
+                }
+            }
+
+            function renderMissingWord(wordName) {
+                const container = document.getElementById('words-container');
+
+                container.innerHTML = `
+                    <div class="word">
+                        <h2>Добавить слово в словарь</h2>
+                        <p>Слово <strong>${escapeHtml(wordName)}</strong> пока не найдено.</p>
+                        <p>Вы можете добавить для него первое определение.</p>
+                        <button id="add-missing-word-button">Добавить определение</button>
+                    </div>
+                `;
+
+                document.getElementById('add-missing-word-button').addEventListener('click', function() {
+                    window.addDefinition(wordName);
+                });
+            }
+
             window.loadWords = async function() {
                 const container = document.getElementById('words-container');
                 container.innerHTML = '<p>Загрузка...</p>';
-                
+
                 try {
                     const { data: words, error } = await window.supabaseClient
                         .from('words')
                         .select('*')
                         .order('name');
-                    
+
                     if (error) throw error;
-                    
-                    let html = '<h2>Список слов (' + words.length + ')</h2>';
-                    
-                    words.forEach(word => {
-                        html += `
-                            <div class="word">
-                                <h3>${word.name} (ID: ${word.id})</h3>
-                                <button onclick="loadDefinitions(${word.id})">
-                                    Показать определения
-                                </button>
-                                <div id="defs-${word.id}"></div>
-                            </div>
-                        `;
-                    });
-                    
-                    container.innerHTML = html;
-                    
+
+                    if (!words || words.length === 0) {
+                        container.innerHTML = '<p>Слов пока нет</p>';
+                        return;
+                    }
+
+                    const randomWord = words[Math.floor(Math.random() * words.length)];
+                    renderWordCard(randomWord, { title: 'Случайное слово', showRandomButton: true });
                 } catch (error) {
                     container.innerHTML = `<p class="error">Ошибка загрузки слов: ${error.message}</p>`;
                     console.error('Ошибка загрузки слов:', error);
                 }
-            }
-            
-            // 2. Получить определения для слова
+            };
+
+            window.searchWord = async function() {
+                const input = document.getElementById('search-input');
+                const container = document.getElementById('words-container');
+                const wordName = normalizeWordName(input.value);
+
+                if (!wordName) {
+                    loadWords();
+                    return;
+                }
+
+                container.innerHTML = '<p>Ищем слово...</p>';
+
+                try {
+                    const { data: words, error } = await window.supabaseClient
+                        .from('words')
+                        .select('*')
+                        .eq('name', wordName)
+                        .limit(1);
+
+                    if (error) throw error;
+
+                    if (words && words.length > 0) {
+                        renderWordCard(words[0], {
+                            title: `Результат поиска: ${wordName}`,
+                            showRandomButton: false,
+                            autoLoadDefinitions: true
+                        });
+                        return;
+                    }
+
+                    renderMissingWord(wordName);
+                } catch (error) {
+                    container.innerHTML = `<p class="error">Ошибка поиска слова: ${error.message}</p>`;
+                    console.error('Ошибка поиска слова:', error);
+                }
+            };
+
             window.loadDefinitions = async function(wordId) {
                 const container = document.getElementById(`defs-${wordId}`);
+                if (!container) return;
+
                 container.innerHTML = '<p>Загрузка определений...</p>';
-                
+
                 try {
                     const { data: definitions, error } = await window.supabaseClient
                         .from('definitions')
                         .select('*')
                         .eq('word_id', wordId)
                         .order('upvotes', { ascending: false });
-                    
+
                     if (error) throw error;
-                    
+
                     if (definitions.length === 0) {
                         container.innerHTML = '<p>Определений пока нет</p>';
                         return;
                     }
-                    
+
                     let html = '<div class="definitions">';
-                    
+
                     definitions.forEach(def => {
                         html += `
                             <div class="definition">
-                                <p><strong>Определение:</strong> ${def.definition_text}</p>
-                                ${def.example_usage ? `<p><em>Пример:</em> ${def.example_usage}</p>` : ''}
+                                <p><strong>Определение:</strong> ${escapeHtml(def.definition_text)}</p>
+                                ${def.example_usage ? `<p><em>Пример:</em> ${escapeHtml(def.example_usage)}</p>` : ''}
                                 <p>
                                     <small>
-                                        👍 ${def.upvotes} | 👎 ${def.downvotes} 
-                                        | Автор: ${def.author_name || 'Аноним'}
+                                        👍 ${def.upvotes} | 👎 ${def.downvotes}
+                                        | Автор: ${escapeHtml(def.author_name || 'Аноним')}
                                     </small>
                                 </p>
                                 <button onclick="upvoteDefinition(${def.id})">+1</button>
@@ -107,17 +332,15 @@
                             </div>
                         `;
                     });
-                    
+
                     html += '</div>';
                     container.innerHTML = html;
-                    
                 } catch (error) {
                     container.innerHTML = `<p class="error">Ошибка загрузки определений: ${error.message}</p>`;
                     console.error('Ошибка загрузки определений:', error);
                 }
-            }
-            
-            // 3. Поставить лайк определению
+            };
+
             window.upvoteDefinition = async function(definitionId) {
                 try {
                     const { data: def, error: fetchError } = await window.supabaseClient
@@ -125,32 +348,27 @@
                         .select('upvotes, word_id')
                         .eq('id', definitionId)
                         .single();
-                    
+
                     if (fetchError) throw fetchError;
-                    
-                    const newUpvotes = def.upvotes + 1;
-                    
+
                     const { error: updateError } = await window.supabaseClient
                         .from('definitions')
-                        .update({ upvotes: newUpvotes })
+                        .update({ upvotes: def.upvotes + 1 })
                         .eq('id', definitionId);
-                    
+
                     if (updateError) throw updateError;
-                    
+
                     alert('Лайк добавлен!');
-                    
-                    // Обновляем отображение
+
                     if (def.word_id) {
                         loadDefinitions(def.word_id);
                     }
-                    
                 } catch (error) {
                     console.error('Ошибка голосования:', error);
                     alert('Ошибка: ' + error.message);
                 }
-            }
-            
-            // 4. Поставить дизлайк
+            };
+
             window.downvoteDefinition = async function(definitionId) {
                 try {
                     const { data: def, error: fetchError } = await window.supabaseClient
@@ -158,71 +376,64 @@
                         .select('downvotes, word_id')
                         .eq('id', definitionId)
                         .single();
-                    
+
                     if (fetchError) throw fetchError;
-                    
-                    const newDownvotes = def.downvotes + 1;
-                    
+
                     const { error: updateError } = await window.supabaseClient
                         .from('definitions')
-                        .update({ downvotes: newDownvotes })
+                        .update({ downvotes: def.downvotes + 1 })
                         .eq('id', definitionId);
-                    
+
                     if (updateError) throw updateError;
-                    
+
                     alert('Дизлайк добавлен!');
-                    
+
                     if (def.word_id) {
                         loadDefinitions(def.word_id);
                     }
-                    
                 } catch (error) {
                     console.error('Ошибка голосования:', error);
                     alert('Ошибка: ' + error.message);
                 }
-            }
-            
-            // 5. Добавить новое определение
-            window.addDefinition = async function() {
-                const wordName = prompt('Введите слово (например: "краш"):');
+            };
+
+            window.addDefinition = async function(prefilledWordName = '') {
+                const promptedWord = prefilledWordName || prompt('Введите слово (например: "краш"):');
+                const wordName = normalizeWordName(promptedWord);
                 if (!wordName) return;
-                
+
                 const definitionText = prompt('Введите определение:');
                 if (!definitionText) {
                     alert('Определение обязательно!');
                     return;
                 }
-                
+
                 const example = prompt('Введите пример использования (необязательно):');
                 const author = prompt('Ваше имя (или оставьте пусто для анонима):') || 'Аноним';
-                
+
                 try {
-                    // 1. Проверяем, есть ли такое слово
                     const { data: existingWords, error: searchError } = await window.supabaseClient
                         .from('words')
                         .select('id')
-                        .eq('name', wordName.trim().toLowerCase());
-                    
-                    let wordId;
-                    
+                        .eq('name', wordName);
+
                     if (searchError) throw searchError;
-                    
+
+                    let wordId;
+
                     if (existingWords && existingWords.length > 0) {
-                        // Слово уже есть
                         wordId = existingWords[0].id;
                     } else {
-                        // Создаем новое слово
                         const { data: newWord, error: insertError } = await window.supabaseClient
                             .from('words')
-                            .insert([{ name: wordName.trim().toLowerCase() }])
+                            .insert([{ name: wordName }])
                             .select('id')
                             .single();
-                        
+
                         if (insertError) throw insertError;
                         wordId = newWord.id;
                     }
-                    
-                    // 2. Добавляем определение
+
                     const { error: defError } = await window.supabaseClient
                         .from('definitions')
                         .insert([
@@ -235,62 +446,58 @@
                                 downvotes: 0
                             }
                         ]);
-                    
+
                     if (defError) throw defError;
-                    
+
                     alert('✅ Определение успешно добавлено!');
-                    
-                    // 3. Обновляем список слов
-                    loadWords();
-                    
+
+                    const searchInput = document.getElementById('search-input');
+                    if (searchInput) {
+                        searchInput.value = wordName;
+                    }
+
+                    renderWordCard(
+                        { id: wordId, name: wordName },
+                        {
+                            title: 'Слово добавлено в словарь',
+                            showRandomButton: false,
+                            autoLoadDefinitions: true
+                        }
+                    );
                 } catch (error) {
                     console.error('Ошибка добавления:', error);
                     alert('❌ Ошибка: ' + error.message);
                 }
-            }
-            
-            // 6. Добавить новое слово без определения
+            };
+
             window.addWord = async function() {
-                const wordName = prompt('Введите новое слово:');
+                const wordName = normalizeWordName(prompt('Введите новое слово:'));
                 if (!wordName) return;
-                
+
                 try {
                     const { error } = await window.supabaseClient
                         .from('words')
-                        .insert([{ name: wordName.trim().toLowerCase() }]);
-                    
+                        .insert([{ name: wordName }]);
+
                     if (error) throw error;
-                    
-                    alert('✅ Слово "' + wordName + '" добавлено!');
+
+                    alert(`✅ Слово "${wordName}" добавлено!`);
                     loadWords();
-                    
                 } catch (error) {
                     console.error('Ошибка добавления слова:', error);
                     alert('❌ Ошибка: ' + error.message);
                 }
-            }
-            
-            // === ЗАГРУЗКА ДАННЫХ ПРИ ЗАПУСКЕ ===
-            document.addEventListener('DOMContentLoaded', function() {
-                // Тестовое сообщение
-                console.log('Приложение загружается...');
-                
-                // Проверяем подключение
-                testConnection();
-                
-                // Загружаем слова
-                loadWords();
-            });
-            // Функция проверки подключения
+            };
+
             async function testConnection() {
                 try {
-                    const { data, error } = await window.supabaseClient
+                    const { error } = await window.supabaseClient
                         .from('words')
                         .select('count', { count: 'exact', head: true });
-                    
+
                     if (error) {
                         console.error('❌ Ошибка подключения к Supabase:', error);
-                        document.getElementById('words-container').innerHTML = 
+                        document.getElementById('words-container').innerHTML =
                             `<p class="error">Ошибка подключения к базе данных: ${error.message}</p>`;
                     } else {
                         console.log('✅ Подключение к Supabase успешно');
@@ -299,38 +506,60 @@
                     console.error('❌ Критическая ошибка:', err);
                 }
             }
-            
-        })(); // Конец анонимной функции
+
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Приложение загружается...');
+
+                const searchButton = document.getElementById('search-button');
+                const searchInput = document.getElementById('search-input');
+
+                if (searchButton) {
+                    searchButton.addEventListener('click', function() {
+                        window.searchWord();
+                    });
+                }
+
+                if (searchInput) {
+                    searchInput.addEventListener('keydown', function(event) {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            window.searchWord();
+                        }
+                    });
+                }
+
+                testConnection();
+                loadWords();
+            });
+        })();
     </script>
-    
+
     <div style="margin-top: 30px; padding: 20px; background: #e8f5e9; border-radius: 8px;">
         <h3>📋 Управление словарем</h3>
-        
+
         <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
             <button onclick="addDefinition()">➕ Добавить определение</button>
             <button onclick="addWord()">✨ Добавить новое слово</button>
             <button onclick="loadWords()">🔄 Обновить список</button>
         </div>
-        
+
         <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; border-left: 4px solid #2196F3;">
             <h4>🎯 Как пользоваться:</h4>
             <ol>
-                <li>Нажмите "Добавить определение"</li>
-                <li>Введите слово (если его нет - оно создастся автоматически)</li>
-                <li>Введите определение и пример</li>
-                <li>Нажмите на слово, чтобы увидеть все его определения</li>
-                <li>Голосуйте за лучшие определения кнопками 👍/👎</li>
+                <li>Введите слово в поисковую строку сверху</li>
+                <li>Если слово найдено, его определения откроются автоматически</li>
+                <li>Если слова нет, появится экран "Добавить слово в словарь"</li>
+                <li>Через кнопку можно сразу добавить первое определение</li>
+                <li>Голосуйте за лучшие определения кнопками 👍 и 👎</li>
             </ol>
-            
+
             <p><strong>💡 Подсказка:</strong> Откройте консоль браузера (F12 → Console) для отладки.</p>
         </div>
     </div>
-    
-    <!-- Простой футер -->
+
     <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9em;">
         <p>Славянский Сленг Словарь | База данных: Supabase | Слов в базе: <span id="word-count">...</span></p>
         <script>
-            // Автоматический подсчет слов
             setTimeout(async () => {
                 try {
                     const { count } = await window.supabaseClient
@@ -344,6 +573,4 @@
         </script>
     </footer>
 </body>
-
 </html>
-
