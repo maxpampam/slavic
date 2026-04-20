@@ -4,53 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Славянский Сленг Словарь</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Unbounded:wght@700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Proxima Nova', 'Segoe UI', Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            background: #0F1E14;
+            color: #0F1E14;
+        }
+
+        :root {
+            --header-offset: 260px;
+        }
+
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            padding: 10px 20px 6px;
+            background: #E8F2E9;
+            z-index: 1000;
+        }
+
+        .top-header-inner {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .page-content {
+            padding-top: var(--header-offset);
         }
 
         h1 {
-            font-family: 'Unbounded', sans-serif;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin: 0 0 4px;
+            color: #0F1E14;
         }
 
         .hero-description {
-            margin: 0 0 16px;
-            font-size: 18px;
-            color: #4b5563;
+            margin: 0 0 6px;
+            font-size: 16px;
+            color: #0F1E14;
+            font-weight: 700;
+            letter-spacing: 0.02em;
         }
+
+        .hero-letter {
+            display: inline-block;
+        }
+
+        .hero-description .hero-letter {
+            color: #0F1E14 !important;
+        }
+
 
         .flag-marquee {
             overflow: hidden;
-            background: linear-gradient(90deg, #f5f5f5 0%, #ffffff 50%, #f5f5f5 100%);
-            border-radius: 999px;
-            padding: 10px 0;
-            margin: 12px 0 20px;
-            border: 1px solid #e5e7eb;
+            margin: 0 0 8px;
+            width: calc(100% + 40px);
+            margin-left: -20px;
         }
 
         .flag-track {
             display: flex;
             width: max-content;
-            animation: marquee-scroll 18s linear infinite;
+            will-change: transform;
+            animation: marquee-scroll 20s linear infinite;
         }
 
-        .flag-group {
+        .flag-strip {
             display: flex;
             align-items: center;
-            gap: 18px;
-            padding: 0 18px;
-            font-size: 28px;
+            gap: 14px;
+            padding-right: 14px;
+            font-size: 18px;
             line-height: 1;
             white-space: nowrap;
+            flex: 0 0 auto;
+        }
+
+        .flag-item {
+            display: inline-block;
         }
 
         @keyframes marquee-scroll {
@@ -67,28 +105,48 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            margin: 24px 0 16px;
+            margin: 8px 0 8px;
         }
 
         .search-input {
             flex: 1 1 320px;
             padding: 12px 14px;
             font-size: 16px;
-            border: 1px solid #d0d7de;
+            border: 1px solid #0F1E14;
             border-radius: 8px;
+            min-height: 44px;
+            box-sizing: border-box;
         }
 
         .search-input:focus {
             outline: none;
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+            border-color: #0F1E14;
+            box-shadow: 0 0 0 2px rgba(15, 30, 20, 0.12);
+        }
+
+        .search-bar button {
+            margin: 0;
+            min-height: 44px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
         }
 
         .word {
-            background: #f5f5f5;
+            background: #E8F2E9;
             padding: 15px;
             margin: 10px 0;
             border-radius: 8px;
+        }
+
+        .word > h3 {
+            margin: 0 0 12px;
+            font-size: 72px;
+            line-height: 1;
+            color: #0F1E14;
         }
 
         .definition {
@@ -98,7 +156,7 @@
         }
 
         button {
-            background: #4CAF50;
+            background: #1F4D2E;
             color: white;
             border: none;
             padding: 8px 15px;
@@ -108,7 +166,11 @@
         }
 
         button:hover {
-            background: #45a049;
+            background: #173B23;
+        }
+
+        button[onclick^="loadDefinitions"] {
+            display: none;
         }
 
         .error {
@@ -116,6 +178,10 @@
             padding: 10px;
             background: #ffe6e6;
             border-radius: 4px;
+        }
+
+        div[style*="margin-top: 30px"][style*="background: #e8f5e9"] {
+            display: none;
         }
 
         .success {
@@ -127,8 +193,14 @@
     </style>
 </head>
 <body>
+    <div class="top-header" id="top-header">
+    <div class="top-header-inner">
     <h1>Славик</h1>
-    <p class="hero-description">Народный славянский словарь</p>
+    <p class="hero-description" aria-label="Народный славянский словарь">
+        <span class="hero-letter" style="color: #ffffff;">Н</span><span class="hero-letter" style="color: #0300ff;">а</span><span class="hero-letter" style="color: #dc2626;">р</span><span class="hero-letter" style="color: #1d4ed8;">о</span><span class="hero-letter" style="color: #facc15;">д</span><span class="hero-letter" style="color: #dc2626;">н</span><span class="hero-letter" style="color: #16a34a;">ы</span><span class="hero-letter" style="color: #ffffff;">й</span>
+        <span class="hero-letter" style="color: #ffffff;">с</span><span class="hero-letter" style="color: #dc2626;">л</span><span class="hero-letter" style="color: #ffffff;">а</span><span class="hero-letter" style="color: #dc2626;">в</span><span class="hero-letter" style="color: #1d4ed8;">я</span><span class="hero-letter" style="color: #ffffff;">н</span><span class="hero-letter" style="color: #1d4ed8;">с</span><span class="hero-letter" style="color: #dc2626;">к</span><span class="hero-letter" style="color: #ffffff;">и</span><span class="hero-letter" style="color: #16a34a;">й</span>
+        <span class="hero-letter" style="color: #dc2626;">с</span><span class="hero-letter" style="color: #dc2626;">л</span><span class="hero-letter" style="color: #1d4ed8;">о</span><span class="hero-letter" style="color: #ffffff;">в</span><span class="hero-letter" style="color: #dc2626;">а</span><span class="hero-letter" style="color: #ffffff;">р</span><span class="hero-letter" style="color: #1d4ed8;">ь</span>
+    </p>
 
     <div class="flag-marquee" aria-label="Флаги славянских государств">
         <div class="flag-track">
@@ -162,18 +234,43 @@
                 <span>🇲🇪</span>
                 <span>🇲🇰</span>
             </div>
+            <div class="flag-group" aria-hidden="true">
+                <span>рџ‡·рџ‡є</span>
+                <span>рџ‡єрџ‡¦</span>
+                <span>рџ‡§рџ‡ѕ</span>
+                <span>рџ‡µрџ‡±</span>
+                <span>рџ‡Ёрџ‡ї</span>
+                <span>рџ‡ёрџ‡°</span>
+                <span>рџ‡§рџ‡¬</span>
+                <span>рџ‡·рџ‡ё</span>
+                <span>рџ‡­рџ‡·</span>
+                <span>рџ‡ёрџ‡®</span>
+                <span>рџ‡§рџ‡¦</span>
+                <span>рџ‡Ірџ‡Є</span>
+                <span>рџ‡Ірџ‡°</span>
+            </div>
         </div>
     </div>
 
     <div class="search-bar">
         <input id="search-input" class="search-input" type="text" placeholder="Введите слово для поиска">
-        <button id="search-button">Найти слово</button>
-        <button onclick="loadWords()">Случайное слово</button>
+        <button id="search-button">🔍</button>
+        <button onclick="loadWords()">🔀</button>
+        <button onclick="addDefinition()">➕</button>
     </div>
 
     <div id="words-container">
-        Загрузка слов...
+        Ща погоди...
     </div>
+
+    </div>
+    </div>
+
+    <main class="page-content">
+    <div id="words-container">
+        Р—Р°РіСЂСѓР·РєР° СЃР»РѕРІ...
+    </div>
+    </main>
 
     <script>
         (function() {
@@ -181,6 +278,74 @@
             const supabaseKey = 'sb_publishable_vBBeAZcQPXtaj7z5FCCVYg_6XDdChlu';
 
             window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+            function setupFlagMarquee() {
+                const marquee = document.querySelector('.flag-marquee');
+
+                if (!marquee) {
+                    return;
+                }
+
+                const flags = [
+                    '\u{1F1F7}\u{1F1FA}',
+                    '\u{1F1FA}\u{1F1E6}',
+                    '\u{1F1E7}\u{1F1FE}',
+                    '\u{1F1F5}\u{1F1F1}',
+                    '\u{1F1E8}\u{1F1FF}',
+                    '\u{1F1F8}\u{1F1F0}',
+                    '\u{1F1E7}\u{1F1EC}',
+                    '\u{1F1F7}\u{1F1F8}',
+                    '\u{1F1ED}\u{1F1F7}',
+                    '\u{1F1F8}\u{1F1EE}',
+                    '\u{1F1E7}\u{1F1E6}',
+                    '\u{1F1F2}\u{1F1EA}',
+                    '\u{1F1F2}\u{1F1F0}'
+                ];
+
+                const repeatedFlags = flags.concat(flags, flags);
+                const strip = repeatedFlags
+                    .map(function(flag) {
+                        return `<span class="flag-item">${flag}</span>`;
+                    })
+                    .join('');
+
+                marquee.innerHTML = `
+                    <div class="flag-track">
+                        <div class="flag-strip">${strip}</div>
+                        <div class="flag-strip" aria-hidden="true">${strip}</div>
+                    </div>
+                `;
+            }
+
+            function setupFixedHeader() {
+                const header = document.getElementById('top-header');
+                const main = document.querySelector('.page-content');
+                const containers = Array.from(document.querySelectorAll('#words-container'));
+
+                if (main && containers.length > 1) {
+                    const activeContainer = containers[containers.length - 1];
+
+                    containers.slice(0, -1).forEach(function(node) {
+                        node.remove();
+                    });
+
+                    if (!main.contains(activeContainer)) {
+                        main.appendChild(activeContainer);
+                    }
+
+                    if (header && header.contains(activeContainer)) {
+                        header.removeChild(activeContainer);
+                    }
+                }
+
+                if (header) {
+                    document.documentElement.style.setProperty('--header-offset', `${header.offsetHeight + 30}px`);
+                }
+            }
+
+            setupFlagMarquee();
+            setupFixedHeader();
+            window.addEventListener('resize', setupFixedHeader);
 
             function normalizeWordName(value) {
                 return (value || '').trim().toLowerCase();
@@ -199,18 +364,19 @@
                 const container = document.getElementById('words-container');
                 const title = options.title || 'Случайное слово';
                 const showRandomButton = options.showRandomButton !== false;
+                const autoLoadDefinitions = options.autoLoadDefinitions !== false;
 
                 container.innerHTML = `
                     <h2>${escapeHtml(title)}</h2>
                     <div class="word">
-                        <h3>${escapeHtml(word.name)} (ID: ${word.id})</h3>
+                        <h3>${escapeHtml(word.name)}</h3>
                         <button onclick="loadDefinitions(${word.id})">Показать определения</button>
                         ${showRandomButton ? '<button onclick="loadWords()">Еще случайное слово</button>' : ''}
                         <div id="defs-${word.id}"></div>
                     </div>
                 `;
 
-                if (options.autoLoadDefinitions) {
+                if (autoLoadDefinitions) {
                     loadDefinitions(word.id);
                 }
             }
@@ -251,6 +417,10 @@
 
                     const randomWord = words[Math.floor(Math.random() * words.length)];
                     renderWordCard(randomWord, { title: 'Случайное слово', showRandomButton: true });
+                    const randomWordTitle = container.querySelector('h2');
+                    if (randomWordTitle) {
+                        randomWordTitle.remove();
+                    }
                 } catch (error) {
                     container.innerHTML = `<p class="error">Ошибка загрузки слов: ${error.message}</p>`;
                     console.error('Ошибка загрузки слов:', error);
@@ -558,7 +728,7 @@
     </div>
 
     <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9em;">
-        <p>Славянский Сленг Словарь | База данных: Supabase | Слов в базе: <span id="word-count">...</span></p>
+        <p>Народный Славянский Cловарь | by @maxpampam | Слов в базе: <span id="word-count">...</span></p>
         <script>
             setTimeout(async () => {
                 try {
